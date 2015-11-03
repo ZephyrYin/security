@@ -3,15 +3,22 @@
 
   "name": "Getting started example",
   "description": "This extension shows a Google Image search result for the current page",
-  "version": "1.0",
+  "version": "1.01",
 
   "browser_action": {
-    "default_icon": "icon.png",
-    "default_popup": "popup.html",
-    "default_title": "Click here!"
+    "default_icon": "./imgs/logo.png",
+    "default_title": "Leak Sentry"
   },
+  
+  "background": {
+    "page": "background.html",
+    "persistent": false
+  },
+  
   "permissions": [
     "activeTab",
-    "https://ajax.googleapis.com/"
+    "http://*/",
+	"https://*/"
   ]
+  
 }
