@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
 
-  "name": "Getting started example",
-  "description": "This extension shows a Google Image search result for the current page",
+  "name": "Terminator",
+  "description": "protect your personal information",
   "version": "1.01",
 
   "browser_action": {
@@ -12,13 +12,15 @@
   
   "background": {
     "page": "background.html",
-    "persistent": false
+    "persistent": true
   },
   
   "permissions": [
     "activeTab",
     "http://*/",
-	"https://*/"
+	"https://*/",
+    "webRequest",
+    "webRequestBlocking"
   ]
   
 }
