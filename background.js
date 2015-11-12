@@ -20,18 +20,59 @@ chrome.runtime.onInstalled.addListener(function(details){
     }
 });
 
+/*
+function getURL(tablink) {
+  // do stuff here
+  return tablink;
+}
+*/
 
 // check web request
-
 chrome.webRequest.onBeforeRequest.addListener(
     function(info) {
-        //alert("Cat intercepted: " + info.url);
-        console.log("Cat intercepted: " + info.url);
-        //// Redirect the lolcal request to a random loldog URL.
-        //var i = Math.round(Math.random() * loldogs.length);
-        //return {redirectUrl: loldogs[i]};
+		
+		// Get the current URL of this window
+		
+		// Notice: There is minor bug, Some url is undefined
+		chrome.tabs.query({'lastFocusedWindow': true, 'active': true}, function(tabs){
+			var current_url = tabs[0].url;
+			
+			console.log(current_url);
+					
+			if(info.requestBody === undefined) {
+				// If requestBody is not defined, No need to check 
+			}
+			else {
+				// console.log("It has been defined");
+				// console.log("Request to :" + info.url);
+				// console.log(info);
+				if(info.requestBody.formData !== undefined) {
+					console.log(info.requestBody.formData);
+				}
+				else if(info.requestBody.raw !== undefined) {
+					
+					console.log(info.requestBody.raw);
+				}				
+			}
+			
+		});
     },
     // filters
     {urls: [ "<all_urls>" ]},
     // extraInfoSpec
-    ["blocking"]);
+    ["blocking", "requestBody"]
+);
+
+
+chrome.webRequest.onBeforeSendHeaders.addListener(
+	function(details) {
+		// console.log("Trigger On before Send Header Event!");
+		var header = details.requestHeaders;
+		// console.log(details.method);
+		console.log(header);
+	},
+	// filters
+	{urls: ["<all_urls>" ]},
+	// some other specification
+	["blocking", "requestHeaders"]
+);

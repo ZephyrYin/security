@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded',
 				localStorage.setItem('PhoneNumber', form[5].value);
 				
 				alert("Saving Information to Local Storage");
-				//window.close();
+				window.close();
 			}
 		);
 		
