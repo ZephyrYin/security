@@ -1,4 +1,4 @@
-
+// Pop up window in the center of the screen
 function popupwindow(url, title, w, h) {
   var left = (screen.width/2)-(w/2);
   var top = (screen.height/2)-(h/2);
@@ -20,41 +20,43 @@ chrome.runtime.onInstalled.addListener(function(details){
     }
 });
 
-/*
-function getURL(tablink) {
-  // do stuff here
-  return tablink;
-}
-*/
-
 // check web request
 chrome.webRequest.onBeforeRequest.addListener(
     function(info) {
-		
-		// Get the current URL of this window
-		
-		// Notice: There is minor bug, Some url is undefined
+				
+		// Notice: There is some minor bug, Some URL will be undefined
 		chrome.tabs.query({'lastFocusedWindow': true, 'active': true}, function(tabs){
-			var current_url = tabs[0].url;
 			
-			console.log(current_url);
-					
-			if(info.requestBody === undefined) {
-				// If requestBody is not defined, No need to check 
-			}
-			else {
-				// console.log("It has been defined");
-				// console.log("Request to :" + info.url);
-				// console.log(info);
-				if(info.requestBody.formData !== undefined) {
-					console.log(info.requestBody.formData);
+			// Get Current Tab
+			
+			var current_url = new URL(tabs[0].url);
+			// Extract Domain of this URL
+			var current_domain = current_url.host();		
+
+			// Get URL of this request
+			var rqst_url = new URL(info.url);
+			var rqst_domain = rqst_url.host();
+			
+			// Only check request body when host name different
+			if(rqst_domain != current_domain) {
+				console.log("current domain: " + current_domain);
+				console.log("request domain: " + rqst_domain);
+			
+			
+				if(info.requestBody === undefined) {
+					// If requestBody is not defined, No need to check 
 				}
-				else if(info.requestBody.raw !== undefined) {
+				else {
 					
-					console.log(info.requestBody.raw);
-				}				
+					if(info.requestBody.formData !== undefined) {
+						console.log(info.requestBody.formData);
+					}
+					else if(info.requestBody.raw !== undefined) {
+						
+						//console.log(info.requestBody.raw);
+					}				
+				}
 			}
-			
 		});
     },
     // filters
@@ -69,7 +71,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
 		// console.log("Trigger On before Send Header Event!");
 		var header = details.requestHeaders;
 		// console.log(details.method);
-		console.log(header);
+		// console.log(header);
 	},
 	// filters
 	{urls: ["<all_urls>" ]},
