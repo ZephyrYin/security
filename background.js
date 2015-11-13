@@ -20,36 +20,53 @@ chrome.runtime.onInstalled.addListener(function(details){
     }
 });
 
+// Parse a string to get the host of this url
+function parseURLToHostname(url) {
+	var parser = document.createElement('a');
+	parser.href = url;
+	var hostname = parser.hostname;
+	// Find last 2 points in the hostname string
+	var point2 = hostname.lastIndexOf(".");
+	var point1 = hostname.lastIndexOf(".", point2 - 1);
+	if(point1 == -1) {
+		return hostname;
+	}
+	else {
+		return hostname.substring(point1 + 1);
+	}
+}
+
 // check web request
 chrome.webRequest.onBeforeRequest.addListener(
     function(info) {
 				
 		// Notice: There is some minor bug, Some URL will be undefined
-		chrome.tabs.query({'lastFocusedWindow': true, 'active': true}, function(tabs){
+		chrome.tabs.query({'currentWindow': true, 'active': true}, function(tabs){
 			
-			// Get Current Tab
-			
-			var current_url = new URL(tabs[0].url);
-			// Extract Domain of this URL
-			var current_domain = current_url.host();		
+			// Get Current Tab			
+			var cur_url = tabs[0].url;
+			var cur_hostName = parseURLToHostname(cur_url);;		
 
 			// Get URL of this request
-			var rqst_url = new URL(info.url);
-			var rqst_domain = rqst_url.host();
-			
-			// Only check request body when host name different
-			if(rqst_domain != current_domain) {
-				console.log("current domain: " + current_domain);
-				console.log("request domain: " + rqst_domain);
-			
-			
+			var rqst_hostName = parseURLToHostname(info.url);
+						
+			// Only check request body when host names are different
+			if(rqst_hostName != cur_hostName) {
+				
+				console.log("Current Window URL: " + cur_url);
+				console.log("Current Window hostName: " + cur_hostName);
+				console.log("Request hostName: " + rqst_hostName);
+							
 				if(info.requestBody === undefined) {
 					// If requestBody is not defined, No need to check 
 				}
 				else {
 					
+					// TODO: We need to check if there is private information 
+					// In all these headers
+					
 					if(info.requestBody.formData !== undefined) {
-						console.log(info.requestBody.formData);
+						// console.log(info.requestBody.formData);
 					}
 					else if(info.requestBody.raw !== undefined) {
 						
