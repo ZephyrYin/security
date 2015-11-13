@@ -21,7 +21,8 @@
 	"https://*/",
     "webRequest",
     "webRequestBlocking",
-	"tabs"
+	"tabs",
+	"storage"
   ]
   
 }
