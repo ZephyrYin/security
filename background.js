@@ -43,7 +43,13 @@ chrome.webRequest.onBeforeRequest.addListener(
 		chrome.tabs.query({'currentWindow': true, 'active': true}, function(tabs){
 			
 			// Get Current Tab			
-			var cur_url = tabs[0].url;
+			var cur_url ='';
+	        // if tabs[0].url is invalid return  
+			try{
+				cur_url= tabs[0].url;
+			}catch(e){
+				return;
+			}
 			var cur_hostName = parseURLToHostname(cur_url);;		
 
 			// Get URL of this request
@@ -81,9 +87,9 @@ chrome.webRequest.onBeforeRequest.addListener(
 						for(var key in info.requestBody.formData) {
 							var content = info.requestBody.formData[key];
 							for (var jj = 0; jj < content.length; jj++) {
+								// res has two property: isLeaked : true/false
+								//                       leakID: 0-63-->"what info is leaked" 
 								var res = checkPIILeak(content[jj]);
-								
-								
 																
 							}
 						}
@@ -96,7 +102,7 @@ chrome.webRequest.onBeforeRequest.addListener(
 						// TODO: Test if Raw has PII leaked
 						
 						// TODO: Check in the server side to do Crowd Sourcing
-						console.log(info.requestBody.raw);
+						// console.log(info.requestBody.raw);
 					 
 					}				
 				}				

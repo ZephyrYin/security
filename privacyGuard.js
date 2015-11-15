@@ -42,22 +42,43 @@ function checkPIILeak(str){
     return {'isLeaked':leak, 'leakId':leakId};
 }
 function leakFirstName(str){
-    
-    return true;
+    // Normalize the string
+	str = str.toLowerCase();
+	var got = str.search(firstName);
+	if(got == -1) {
+		return false;
+	}
+	else {
+		return true;
+	}
 }
 function leakLastName(str){
-    
-    return true;
+    // Normalize the string
+	str = str.toLowerCase();
+	var got = str.search(lastName);
+	if(got == -1) {
+		return false;
+	}
+	else {
+		return true;
+	}
 }
 function leakEmail(str){
-    return true;
+    var got = str.search(email);
+	if(got == -1) {
+		return false;
+	}
+	else {
+		return true;
+	}
 }
+// TODO: Complete Check for the rest of the three
 function leakBirthday(str){
-    return true;
+    return false;
 }
 function leakAddress(str){
-    return true;
+    return false;
 }
 function leakPhoneNumber(str){
-    return true;
+    return false;
 }
