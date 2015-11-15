@@ -5,7 +5,6 @@ function popupwindow(url, title, w, h) {
   return window.open(url, title, 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width='+w+', height='+h+', top='+top+', left='+left);
 }
 
-
 // Check whether new version is installed
 chrome.runtime.onInstalled.addListener(function(details){
     if(details.reason == "install"){
@@ -19,18 +18,6 @@ chrome.runtime.onInstalled.addListener(function(details){
 		popupwindow("getInfo.html", windowName, screen.width / 1.5, screen.height / 1.5);
     }
 	
-});
-
-// Query vector Is used to get User PII information
-query_vector = ['FirstName', 'LastName', 'DateOfBirth', 'Email', 'Address', 'PhoneNumber'];
-	
-chrome.storage.local.get(query_vector,  function(ret) {
-	firstName = ret.FirstName;
-	lastName = ret.LastName;
-	email = ret.Email
-	dob = ret.DateOfBirth;
-	address = ret.Address;
-	phone = ret.PhoneNumber;
 });
 
 // Parse a string to get the host of this url
@@ -48,7 +35,6 @@ function parseURLToHostname(url) {
 		return hostname.substring(point1 + 1);
 	}
 }
-
 	
 chrome.webRequest.onBeforeRequest.addListener(
     function(info) {
@@ -75,6 +61,9 @@ chrome.webRequest.onBeforeRequest.addListener(
 					// TODO: We need to check if there is private information 
 					// In all these headers
 					
+					var isLeaked = false;
+					var infoLeaked = "000000";
+					
 					if(info.requestBody.error !== undefined) {
 						console.log(info.requestBody.error);
 					}
@@ -84,32 +73,30 @@ chrome.webRequest.onBeforeRequest.addListener(
 						// *******************************************
 						//         Test If PII has Leaked
 						// *******************************************
-						// TODO: Test if formData has PII leaked
-
-						var isLeaked = false;
-						var infoLeaked = [];
-							
+						
+						// TODO: Check in the server side to do Crowd Sourcing 
+						
+						
 						// Form data is a dictionary e.g. {key: [value1, value2]}
 						for(var key in info.requestBody.formData) {
 							var content = info.requestBody.formData[key];
 							for (var jj = 0; jj < content.length; jj++) {
-								// Test over Six type of PII 
-								// 1) Test for FirstName and LastName
-								content[jj].search(ret.FirstName);
-								content[jj].search(ret.LastName);
-								// 2) Test for Email Address
-							
-								// 3) Test for TelephoneNumber
+								var res = checkPIILeak(content[jj]);
 								
-								// 4) Test for Physical Address
 								
-								// 5) Test for Date of Birth
-								
+																
 							}
 						}
 					}
 					else if(info.requestBody.raw !== undefined) {						
-					// TODO: Test if Raw has PII leaked
+						
+						// *******************************************
+						//         Test If PII has Leaked
+						// *******************************************
+						// TODO: Test if Raw has PII leaked
+						
+						// TODO: Check in the server side to do Crowd Sourcing
+						console.log(info.requestBody.raw);
 					 
 					}				
 				}				
@@ -136,16 +123,15 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
 			// Get URL of this request
 			var rqst_hostName = parseURLToHostname(info.url);
 				
-			var query_vector = ['FirstName', 'LastName', 'DateOfBirth', 'Email', 'Address', 'PhoneNumber'];
+				
 			// Only check request body when host names are different
 			if(rqst_hostName != cur_hostName) {
 				
 				// header is an array
 				var header = info.requestHeaders;
 				// console.log(header);
-				// TODO: Check if requestHeader has PII leaked
-
-				console.log(firstName);			
+				// TODO: Check if requestHeader has PII leaked	
+				
 				
 			}
 		});
