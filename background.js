@@ -56,7 +56,7 @@ chrome.webRequest.onBeforeRequest.addListener(
 			var rqst_hostName = parseURLToHostname(info.url);
 						
 			// Only check request body when host names are different
-			if(rqst_hostName != cur_hostName) {
+			//if(rqst_hostName != cur_hostName) {
 				
 				// console.log("Current Window URL: " + cur_url);
 				// console.log("Current Window hostName: " + cur_hostName);
@@ -67,8 +67,9 @@ chrome.webRequest.onBeforeRequest.addListener(
 					// TODO: We need to check if there is private information 
 					// In all these headers
 					
+					// Flags to check for Info Leakage in who requestBody
 					var isLeaked = false;
-					var infoLeaked = "000000";
+					var infoLeaked = 0;
 					
 					if(info.requestBody.error !== undefined) {
 						console.log(info.requestBody.error);
@@ -90,9 +91,19 @@ chrome.webRequest.onBeforeRequest.addListener(
 								// res has two property: isLeaked : true/false
 								//                       leakID: 0-63-->"what info is leaked" 
 								var res = checkPIILeak(content[jj]);
-																
+								if(res.isLeaked) {
+									isLeaked = true;
+									infoLeaked = infoLeaked | res.leakId;
+									console.log(content[jj]);
+								}								
 							}
 						}
+						
+						// After Check for all the formData
+						if(isLeaked) {
+							console.log("User information has been leaked with type: " + infoLeaked);
+						}						
+						
 					}
 					else if(info.requestBody.raw !== undefined) {						
 						
@@ -102,11 +113,16 @@ chrome.webRequest.onBeforeRequest.addListener(
 						// TODO: Test if Raw has PII leaked
 						
 						// TODO: Check in the server side to do Crowd Sourcing
-						// console.log(info.requestBody.raw);
-					 
+						for(var ii = 0; ii < info.requestBody.raw.length; ii++) {
+							var content = info.requestBody.raw[ii].bytes;
+							var path = info.requestBody.raw[ii].file;
+							console.log(content);
+							console.log(path);
+							
+						}
 					}				
 				}				
-			}
+			//} // End if for testing 3rd party request
 		});
     },
     // filters
@@ -149,3 +165,83 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
 	// some other specification
 	["blocking", "requestHeaders"]
 );
+
+
+
+function loadJQuery(src_path){
+	var jqueryScript = document.createElement("script");
+	jqueryScript.type = "text/javascript";
+	jqueryScript.src = src_path;
+	document.getElementsByTagName("head")[0].appendChild(jqueryScript);
+}
+
+//jQuery MAY OR MAY NOT be loaded at this stage
+function getLeakInfo(url) {
+	if(typeof jQuery != "undefined"){
+
+		var json_query_obj = {
+			type: 'domain',
+			url: url				// url wanna to query
+		};
+
+
+		$.ajax({
+			url: 'http://terminator.dpkg.me/api/get',
+			type: 'POST',
+			contentType: 'application/json; charset=utf-8',
+			data: JSON.stringify(json_query_obj),
+			dataType: 'json',
+			success: function(info) {
+				console.log(info);		// get info here
+			},
+			error: function(err){
+				console.log(err);
+			}
+		});
+	}else{
+		window.setTimeout(getLeakInfo, 1000, url);
+	}
+};
+
+function saveLeakInfo(source_url, is_leak, is_accept, dest_url){
+	if(typeof jQuery != "undefined"){
+		var json_query_obj = {
+			url: source_url,
+			isLeak: is_leak,
+			isAccept: is_accept,
+			leakTo: dest_url
+		}
+
+		$.ajax({
+			url: 'http://terminator.dpkg.me/api/put',
+			type: 'POST',
+			contentType: 'application/json; charset=utf-8',
+			data: JSON.stringify(json_query_obj),
+			dataType: 'json',
+
+			success: function(result) {
+				console.log(result);
+			},
+			error: function(err){
+				console.log(err);
+			}
+		});
+	}else{
+		window.setTimeout(saveLeakInfo, 1000, source_url, is_leak, is_accept, dest_url);
+	}
+}
+
+//loadJQuery("./javascripts/jquery-2.1.4.min.js");			// initialize jQuery
+//
+//window.setTimeout(getLeakInfo, 1000, 'baidu.com');		// query baidu.com
+//
+//window.setTimeout(saveLeakInfo, 1000, "pornhub.com", true, true, [
+//	{
+//		url: 'https://91porn.com',
+//		type: 1
+//	},
+//	{
+//		url: 'http://sexinsex.net',
+//		type: 2
+//	}
+//])

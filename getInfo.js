@@ -50,19 +50,19 @@ document.addEventListener('DOMContentLoaded',
 				// Delete / in DOB, only store digits
 				var dob = form[2].value.replace(/\D/g,'');
 				// Do nothing with email
-				var email = form[3].value;
+				var email = form[3].value.toLowerCase();
 				// Change address to lowercase
 				var address = form[4].value.toLowerCase();
 				// Delete - in DOB, only store digits
 				var phone = form[5].value.replace(/\D/g,'');
 				
 				
-				chrome.storage.local.set( {'FirstName' : form[0].value.toLowerCase()});
-				chrome.storage.local.set( {'LastName' : form[1].value.toLowerCase()});
-				chrome.storage.local.set( {'DateOfBirth' : form[2].value});
-				chrome.storage.local.set( {'Email' : form[3].value});			
-				chrome.storage.local.set( {'Address' : form[4].value});
-				chrome.storage.local.set( {'PhoneNumber' : form[5].value});
+				chrome.storage.local.set( {'FirstName' : firstname});
+				chrome.storage.local.set( {'LastName' : lastname});
+				chrome.storage.local.set( {'DateOfBirth' : dob});
+				chrome.storage.local.set( {'Email' : email});			
+				chrome.storage.local.set( {'Address' : address});
+				chrome.storage.local.set( {'PhoneNumber' : phone});
 				
 				alert("Saving Information to Local Storage");
 				window.close();

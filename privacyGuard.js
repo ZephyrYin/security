@@ -8,17 +8,10 @@ chrome.storage.local.get(query_vector,  function(ret) {
 	dob = ret.DateOfBirth;
 	address = ret.Address;
 	phone = ret.PhoneNumber;
-	
-	console.log(  firstName + " "
-				+ lastName + " "
-				+ email + " "
-				+ dob + " "
-				+ address + " "
-				+ phone + " ");
 });
 
 function checkPIILeak(str){
-    str=str.toLowerCase();
+    str=str.toLowerCase();// to lower case
     var isLeaked = false,
         leakId = 0;
 		
@@ -50,12 +43,18 @@ function checkPIILeak(str){
     return {'isLeaked':isLeaked, 'leakId':leakId};
 }
 function leakFirstName(str){
-	str = str.toLowerCase();
-    return str.match(firstName)!=null;
+	// Construct the pattern to be matched
+	var pattern = "[^A-Za-z]" + firstName + "[^A-Za-z]";
+	var rgx = new RegExp(pattern);
+	
+    return rgx.test(str);
 }
 function leakLastName(str){
-	str = str.toLowerCase();
-    return str.match(lastName)!=null;
+    // COnstruct the pattern to be matched
+	var pattern = "[^A-Za-z]" + lastName + "[^A-Za-z]";
+	var rgx = new RegExp(pattern);
+	
+    return rgx.test(str);
 }
 function leakEmail(str){
     return str.match(email)!=null;
@@ -65,13 +64,11 @@ function leakBirthday(str){
 	var pattern = ".*" + dob.substring(0,2) + ".*" 
 	                   + dob.substring(2,4) + ".*" 
 					   + dob.substring(4,8) + ".*";
-					
 	var rgx = new RegExp(pattern);
     
 	return rgx.test(str);
 }
-function leakAddress(str){
-	str = str.toLowerCase();
+function leakAddress(str){	
     return str.match(address)!=null;
 }
 function leakPhoneNumber(str){
