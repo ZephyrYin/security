@@ -105,6 +105,7 @@ chrome.webRequest.onBeforeRequest.addListener(
 						}						
 						
 					}
+					/* Does not care about raw data for now 
 					else if(info.requestBody.raw !== undefined) {						
 						
 						// *******************************************
@@ -116,11 +117,13 @@ chrome.webRequest.onBeforeRequest.addListener(
 						for(var ii = 0; ii < info.requestBody.raw.length; ii++) {
 							var content = info.requestBody.raw[ii].bytes;
 							var path = info.requestBody.raw[ii].file;
-							console.log(content);
-							console.log(path);
+														
+							if(content !== undefined) {
+								
 							
 						}
-					}				
+					}	
+					*/		
 				}				
 			//} // End if for testing 3rd party request
 		});
@@ -154,11 +157,27 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
 				// console.log(header);
 				// TODO: Check if requestHeader has PII leaked	
 				
+				var isLeaked = false;
+				var infoLeaked = 0;
 				
-			}
-		});
-		
-		
+				for(var ii = 0; ii < header.length; ii++) {
+					// res has two property: isLeaked : true/false
+					//                       leakID: 0-63-->"what info is leaked" 
+					var res = checkPIILeak(header[ii].value);
+					if(res.isLeaked) {
+						isLeaked = true;
+						infoLeaked = infoLeaked | res.leakId;
+						console.log(header[ii].value);
+					}										
+				}
+				
+				// After Check for all the formData
+				if(isLeaked) {
+					console.log("User information has been leaked with type: " + infoLeaked);
+				}	
+				
+			} // End if for Cheking 3rd party Domain
+		});	
 	},
 	// filters
 	{urls: ["<all_urls>" ]},
