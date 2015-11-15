@@ -8,9 +8,9 @@ document.addEventListener('DOMContentLoaded',
 				if(form.length != 7) {
 					alert("something wrong!")
 				}
-				
-				chrome.storage.local.set( {'FirstName' : form[0].value});
-				chrome.storage.local.set( {'LastName' : form[1].value});
+								
+				chrome.storage.local.set( {'FirstName' : form[0].value.toLowerCase()});
+				chrome.storage.local.set( {'LastName' : form[1].value.toLowerCase()});
 				chrome.storage.local.set( {'DateOfBirth' : form[2].value});
 				chrome.storage.local.set( {'Email' : form[3].value});			
 				chrome.storage.local.set( {'Address' : form[4].value});

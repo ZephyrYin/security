@@ -18,6 +18,19 @@ chrome.runtime.onInstalled.addListener(function(details){
 		windowName = "Information Collection";
 		popupwindow("getInfo.html", windowName, screen.width / 1.5, screen.height / 1.5);
     }
+	
+});
+
+// Query vector Is used to get User PII information
+query_vector = ['FirstName', 'LastName', 'DateOfBirth', 'Email', 'Address', 'PhoneNumber'];
+	
+chrome.storage.local.get(query_vector,  function(ret) {
+	firstName = ret.FirstName;
+	lastName = ret.LastName;
+	email = ret.Email
+	dob = ret.DateOfBirth;
+	address = ret.Address;
+	phone = ret.PhoneNumber;
 });
 
 // Parse a string to get the host of this url
@@ -36,7 +49,7 @@ function parseURLToHostname(url) {
 	}
 }
 
-// check web request
+	
 chrome.webRequest.onBeforeRequest.addListener(
     function(info) {
 				
@@ -53,26 +66,53 @@ chrome.webRequest.onBeforeRequest.addListener(
 			// Only check request body when host names are different
 			if(rqst_hostName != cur_hostName) {
 				
-				console.log("Current Window URL: " + cur_url);
-				console.log("Current Window hostName: " + cur_hostName);
-				console.log("Request hostName: " + rqst_hostName);
+				// console.log("Current Window URL: " + cur_url);
+				// console.log("Current Window hostName: " + cur_hostName);
+				// console.log("Request hostName: " + rqst_hostName);
 							
-				if(info.requestBody === undefined) {
-					// If requestBody is not defined, No need to check 
-				}
-				else {
+				if(info.requestBody !== undefined) {
 					
 					// TODO: We need to check if there is private information 
 					// In all these headers
 					
-					if(info.requestBody.formData !== undefined) {
-						// console.log(info.requestBody.formData);
+					if(info.requestBody.error !== undefined) {
+						console.log(info.requestBody.error);
 					}
-					else if(info.requestBody.raw !== undefined) {
+					else if(info.requestBody.formData !== undefined) {
+						// console.log(info.requestBody.formData);
 						
-						//console.log(info.requestBody.raw);
+						// *******************************************
+						//         Test If PII has Leaked
+						// *******************************************
+						// TODO: Test if formData has PII leaked
+
+						var isLeaked = false;
+						var infoLeaked = [];
+							
+						// Form data is a dictionary e.g. {key: [value1, value2]}
+						for(var key in info.requestBody.formData) {
+							var content = info.requestBody.formData[key];
+							for (var jj = 0; jj < content.length; jj++) {
+								// Test over Six type of PII 
+								// 1) Test for FirstName and LastName
+								content[jj].search(ret.FirstName);
+								content[jj].search(ret.LastName);
+								// 2) Test for Email Address
+							
+								// 3) Test for TelephoneNumber
+								
+								// 4) Test for Physical Address
+								
+								// 5) Test for Date of Birth
+								
+							}
+						}
+					}
+					else if(info.requestBody.raw !== undefined) {						
+					// TODO: Test if Raw has PII leaked
+					 
 					}				
-				}
+				}				
 			}
 		});
     },
@@ -84,11 +124,33 @@ chrome.webRequest.onBeforeRequest.addListener(
 
 
 chrome.webRequest.onBeforeSendHeaders.addListener(
-	function(details) {
-		// console.log("Trigger On before Send Header Event!");
-		var header = details.requestHeaders;
-		// console.log(details.method);
-		// console.log(header);
+	function(info) {
+
+		// Notice: There is some minor bug, Some URL will be undefined
+		chrome.tabs.query({'currentWindow': true, 'active': true}, function(tabs){
+			
+			// Get Current Tab			
+			var cur_url = tabs[0].url;
+			var cur_hostName = parseURLToHostname(cur_url);;		
+
+			// Get URL of this request
+			var rqst_hostName = parseURLToHostname(info.url);
+				
+			var query_vector = ['FirstName', 'LastName', 'DateOfBirth', 'Email', 'Address', 'PhoneNumber'];
+			// Only check request body when host names are different
+			if(rqst_hostName != cur_hostName) {
+				
+				// header is an array
+				var header = info.requestHeaders;
+				// console.log(header);
+				// TODO: Check if requestHeader has PII leaked
+
+				console.log(firstName);			
+				
+			}
+		});
+		
+		
 	},
 	// filters
 	{urls: ["<all_urls>" ]},
