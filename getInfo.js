@@ -68,9 +68,6 @@ document.addEventListener('DOMContentLoaded',
 				window.close();
 			
 			}
-		);
-		
-		
-		
+		);		
 	}
 );

@@ -44,29 +44,46 @@ function checkPIILeak(str){
 }
 function leakFirstName(str){
 	// Construct the pattern to be matched
-	var pattern = "[^A-Za-z]" + firstName + "[^A-Za-z]";
+	var pattern = "[^a-z]{0,1}" + firstName + "[^a-z]";
 	var rgx = new RegExp(pattern);
 	
-    return rgx.test(str);
+	var pattern2 = firstName + "$";
+	var rgx2 = new RegExp(pattern2);
+	
+    return rgx.test(str) || rgx2.test(str);
 }
 function leakLastName(str){
     // COnstruct the pattern to be matched
-	var pattern = "[^A-Za-z]" + lastName + "[^A-Za-z]";
+	var pattern = "[^a-z]{0,1}" + lastName + "[^a-z]";
 	var rgx = new RegExp(pattern);
 	
-    return rgx.test(str);
+	var pattern2 = lastName + "$";
+	var rgx2 = new RegExp(pattern2);
+	
+    return rgx.test(str) || rgx2.test(str);
 }
 function leakEmail(str){
     return str.match(email)!=null;
 }
 function leakBirthday(str){
 	// Construct the pattern to be matched
-	var pattern = ".*" + dob.substring(0,2) + ".*" 
-	                   + dob.substring(2,4) + ".*" 
-					   + dob.substring(4,8) + ".*";
+	var day = dob.substring(0,2);
+	var month = dob.substring(2,4);
+	var year = dob.substring(4,8);
+	
+	var pattern = ".*" + day + ".*" + month + ".*" + year + ".*";
 	var rgx = new RegExp(pattern);
-    
-	return rgx.test(str);
+	
+	var pattern2 = ".*" + month + ".*" + day + ".*" + year + ".*";
+    var rgx2 = new RegExp(pattern2);
+	
+	var pattern3 = ".*" + year + ".*" + month + ".*" + day + ".*";
+	var rgx3 = new RegExp(pattern3);
+	
+	var pattern4 = ".*" + year + ".*" + day + ".*" + month + ".*";
+	var rgx4 = new RegExp(pattern4);
+	
+	return rgx.test(str) || rgx2.test(str) || rgx3.test(str) || rgx4.test(str);
 }
 function leakAddress(str){	
     return str.match(address)!=null;

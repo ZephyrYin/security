@@ -7,7 +7,8 @@
 
   "browser_action": {
     "default_icon": "./imgs/logo.png",
-    "default_title": "Leak Sentry"
+    "default_title": "Leak Sentry",
+    "default_popup": "popup.html"
   },
     
   "background": {
