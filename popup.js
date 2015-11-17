@@ -1,44 +1,33 @@
-$(document).ready(
-    function getLeakItems() {
-		var leakitems = "first name, last name and .."; //modify this line to get real leak items.
-		document.getElementById("leakitems").innerHTML = leakitems;
-	}
-);
+function httpGet(theUrl) {
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("GET", theUrl, false);
+    xmlHttp.send(null);
+    return xmlHttp.responseText;
+}
 
-$(document).ready(
-	function getLeakTo() {
-		var leakto = "3party.com"; //modify this line to get real leak to.
-		document.getElementById("leakto").innerHTML = leakto;
-	}
-);
+function ranking(theUrl) {
+    var alexaurl = "http://data.alexa.com/data?cli=10&url=" + theUrl;
+    var xml = httpGet(alexaurl);
+    xmlDoc = $.parseXML(xml),
+    $xml = $(xmlDoc),
+    $rank = $xml.find("COUNTRY").attr("RANK");
+	return $rank;
+}
 
-$(document).ready(
-	function getRank() {
-		var rank = "11777"; //modify this line to get real rank.
-		document.getElementById("rank").innerHTML = rank;
-	}
-);
-
-$(document).ready(
-	function getWOT() {
-		var wot = "low trust"; //modify this line to get real WOT.
-		document.getElementById("wot").innerHTML = wot;
-	}
-);
-
-$(document).ready(
-	function getIsVisited() {
-		var isvisited = "Yes"; //modify this line to get real isvisited.
-		document.getElementById("isvisited").innerHTML = isvisited;
-	}
-);
-
-$(document).ready(
-	function getCommunity() {
-		var community = '99% of users choose "Scrub"'; //modify this line to get real community.
-		document.getElementById("community").innerHTML = community;
-	}
-);
+chrome.extension.onConnect.addListener(function(port) {
+  console.log("Connected .....");
+  port.onMessage.addListener(function(msg) {
+        msg=msg.split(';');
+        document.getElementById("leakitems").innerHTML=msg[0];
+        document.getElementById("leakto").innerHTML=msg[1];
+        document.getElementById("rank").innerHTML=ranking(msg[1]);
+        document.getElementById("wot").innerHTML =msg[2];
+        document.getElementById("isvisited").innerHTML=msg[3];
+        document.getElementById("community").innerHTML=msg[4];
+        console.log("message recieved "+ msg);
+        port.postMessage("Hi Popup.js");
+  });
+});
 
 //modify this function for clicking Allow
 function allow() {
