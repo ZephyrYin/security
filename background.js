@@ -1,20 +1,15 @@
 // Global Varabiles
-var cur_url;
-
-// Pop up window in the center of the screen
-function popupwindow(url, title, w, h) {
-  var left = (screen.width/2)-(w/2);
-  var top = (screen.height/2)-(h/2);
-  return window.open(url, title, 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width='+w+', height='+h+', top='+top+', left='+left);
+var cur_url='';
+var local_dict = {};					//current_url : [leak_dest_urls]
+loadJQuery("./javascripts/jquery-2.1.4.min.js");			// initialize jQuery
+var left=0,size=100;
+function isChromeExtensionUrl(url){
+    return url.indexOf('chrome:')==0||url.indexOf('chrome-extension:')==0;
+}
+function skipRequest(url){
+    return url.indexOf('http://terminator.dpkg.me')==0||url.indexOf('chrome-extension:')==0;
 }
 
-function popup(){   
-    var port = chrome.extension.connect({name: "Sample Communication"});
-    port.postMessage("firstname;cs.sunysb.edu;low;yes;90% allow 5%Scrub %5 Stop");
-    port.onMessage.addListener(function(msg) {
-        console.log("message recieved "+ msg);
-    });
-}
 // Check whether new version is installed
 chrome.runtime.onInstalled.addListener(function(details){
     if(details.reason == "install"){
@@ -30,67 +25,80 @@ chrome.runtime.onInstalled.addListener(function(details){
 	
 });
 
-// Parse a string to get the host of this url
-function parseURLToHostname(url) {
-	var parser = document.createElement('a');
-	parser.href = url;
-	var hostname = parser.hostname;
-	// Find last 2 points in the hostname string
-	var point2 = hostname.lastIndexOf(".");
-	var point1 = hostname.lastIndexOf(".", point2 - 1);
-	if(point1 == -1) {
-		return hostname;
-	}
-	else {
-		return hostname.substring(point1 + 1);
-	}
-}
 
-// Add listener to event when current activate tab changes
-chrome.tabs.onActivated.addListener(
-	function(activeInfo) {
-		chrome.tabs.query({'currentWindow': true, 'active': true}, function(tabs){
-			console.log("Tab Changed: " + tabs[0].url);
-		});
-	}
-);
-
-// Add listener to event when current activate tab updates
-chrome.tabs.onUpdated.addListener(
+// For window switching
+chrome.windows.onFocusChanged.addListener(
 	function(changeInfo, tab) {		
 		chrome.tabs.query({'currentWindow': true, 'active': true}, function(tabs){
-			console.log("Tab Updated: " + tabs[0].url);
+            if(isChromeExtensionUrl(tabs[0].url))return;
+            cur_url=tabs[0].url;
+            console.log("window changed: " + tabs[0].url);
+            if(local_dict[cur_url] == undefined){
+				saveLeafInfoToLocal(parseURLToHostname(cur_url));
+			}
 		});
 	}
 );
-	
+// Add listener to event when current activate tab updates
+chrome.tabs.onUpdated.addListener(
+	function(changeInfo, tab) {
+		chrome.tabs.query({'currentWindow': true, 'active': true}, function(tabs){
+            if(isChromeExtensionUrl(tabs[0].url))return;
+            cur_url=tabs[0].url;
+            console.log("Tab Updated: " + tabs[0].url);
+            if(local_dict[cur_url] == undefined){
+				saveLeafInfoToLocal(parseURLToHostname(cur_url));
+			}
+		});
+	}
+);
+// Add listener to event when current activate tab changes
+chrome.tabs.onActivated.addListener(
+	function(changeInfo, tab) {		
+		chrome.tabs.query({'currentWindow': true, 'active': true}, function(tabs){
+            if(isChromeExtensionUrl(tabs[0].url))return;
+			console.log("Tab Changed: " + tabs[0].url);
+			cur_url = tabs[0].url;
+			if(local_dict[cur_url] == undefined){
+				saveLeafInfoToLocal(parseURLToHostname(cur_url));
+			}
+		});
+	}
+);
 chrome.webRequest.onBeforeRequest.addListener(
     function(info) {
-		
+		if(isChromeExtensionUrl(cur_url)||skipRequest(info.url))return;
+		//if(local_dict[info.url]==undefined)
+		//	return;
+		//console.log("a request got " + info.url);
 		// Flag whether to block the request
 		var block = false;
-
 		var cur_hostName = parseURLToHostname(cur_url);;		
-
 		// Get URL of this request
 		var rqst_hostName = parseURLToHostname(info.url);
+        var isLeaked = false;
+		var infoLeaked = 0;
+		var res = checkPIILeak(info.url);
+        console.log(info);
+		if(res.isLeaked) {
+								isLeaked = true;
+								infoLeaked = infoLeaked | res.leakId;
+								// console.log(content[jj]);
+		}	
 						
 		// Only check request body when host names are different
-		//if(rqst_hostName != cur_hostName) {
+		if(rqst_hostName != cur_hostName) {
 				
-			// console.log("Current Window URL: " + cur_url);
-			// console.log("Current Window hostName: " + cur_hostName);
-			// console.log("Request hostName: " + rqst_hostName);
+			console.log("Current Window URL: " + cur_url);
+			console.log("Current Window hostName: " + cur_hostName);
+			console.log("Request hostName: " + rqst_hostName);
 							
 			if(info.requestBody !== undefined) {
 					
 				// TODO: We need to check if there is private information 
 				// In all these headers
 					
-				// Flags to check for Info Leakage in who requestBody
-				var isLeaked = false;
-				var infoLeaked = 0;
-					
+				// Flags to check for Info Leakage in who requestBody	
 				if(info.requestBody.error !== undefined) {
 					console.log(info.requestBody.error);
 				}
@@ -110,7 +118,7 @@ chrome.webRequest.onBeforeRequest.addListener(
 						for (var jj = 0; jj < content.length; jj++) {
 							// res has two property: isLeaked : true/false
 							//                       leakID: 0-63-->"what info is leaked" 
-							var res = checkPIILeak(content[jj]);
+							res = checkPIILeak(content[jj]);
 							if(res.isLeaked) {
 								isLeaked = true;
 								infoLeaked = infoLeaked | res.leakId;
@@ -120,10 +128,7 @@ chrome.webRequest.onBeforeRequest.addListener(
 					}
 						
 					// After Check for all the formData
-					if(isLeaked) {
-						console.log("User information has been leaked with type: " + infoLeaked);
-						blocked = true;
-					}						
+										
 						
 				}
 				
@@ -146,9 +151,26 @@ chrome.webRequest.onBeforeRequest.addListener(
 						}
 					}	
 				*/
-				return {cancel:blocked};				
-			}				
-		//} // End if for testing 3rd party request		
+				
+			}else{
+                // check others leak
+            }	
+            left+=1;
+            if(isLeaked) {
+                        if(left<size){
+                            popupHTML(infoLeaked,rqst_hostName);                  
+                        //popupHTML('popup.html');
+                            console.log("User information has been leaked with type: " + infoLeaked);
+                            block = true;
+                        //console.log(left+" "+cursize);
+                            return {cancel:block};	
+                        }
+                        console.log(left+" "+size);
+			}else{
+                used=false;
+                return {cancel:block};
+            }		
+		} // End if for testing 3rd party request		
     },
     // filters
     {urls: [ "<all_urls>" ]},
@@ -156,7 +178,7 @@ chrome.webRequest.onBeforeRequest.addListener(
     ["blocking", "requestBody"]
 );
 
-
+/*
 chrome.webRequest.onBeforeSendHeaders.addListener(
 	function(info) {
 		
@@ -205,8 +227,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
 	// some other specification
 	["blocking", "requestHeaders"]
 );
-
-
+*/
 
 function loadJQuery(src_path){
 	var jqueryScript = document.createElement("script");
@@ -214,74 +235,3 @@ function loadJQuery(src_path){
 	jqueryScript.src = src_path;
 	document.getElementsByTagName("head")[0].appendChild(jqueryScript);
 }
-
-//jQuery MAY OR MAY NOT be loaded at this stage
-function getLeakInfo(url) {
-	if(typeof jQuery != "undefined"){
-
-		var json_query_obj = {
-			type: 'domain',
-			url: url				// url wanna to query
-		};
-
-
-		$.ajax({
-			url: 'http://terminator.dpkg.me/api/get',
-			type: 'POST',
-			contentType: 'application/json; charset=utf-8',
-			data: JSON.stringify(json_query_obj),
-			dataType: 'json',
-			success: function(info) {
-				console.log(info);		// get info here
-			},
-			error: function(err){
-				console.log(err);
-			}
-		});
-	}else{
-		window.setTimeout(getLeakInfo, 1000, url);
-	}
-};
-
-function saveLeakInfo(source_url, is_leak, is_accept, dest_url){
-	if(typeof jQuery != "undefined"){
-		var json_query_obj = {
-			url: source_url,
-			isLeak: is_leak,
-			isAccept: is_accept,
-			leakTo: dest_url
-		}
-
-		$.ajax({
-			url: 'http://terminator.dpkg.me/api/put',
-			type: 'POST',
-			contentType: 'application/json; charset=utf-8',
-			data: JSON.stringify(json_query_obj),
-			dataType: 'json',
-
-			success: function(result) {
-				console.log(result);
-			},
-			error: function(err){
-				console.log(err);
-			}
-		});
-	}else{
-		window.setTimeout(saveLeakInfo, 1000, source_url, is_leak, is_accept, dest_url);
-	}
-}
-
-//loadJQuery("./javascripts/jquery-2.1.4.min.js");			// initialize jQuery
-//
-//window.setTimeout(getLeakInfo, 1000, 'baidu.com');		// query baidu.com
-//
-//window.setTimeout(saveLeakInfo, 1000, "pornhub.com", true, true, [
-//	{
-//		url: 'https://91porn.com',
-//		type: 1
-//	},
-//	{
-//		url: 'http://sexinsex.net',
-//		type: 2
-//	}
-//])

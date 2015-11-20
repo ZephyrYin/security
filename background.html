@@ -1,8 +1,51 @@
 <!DOCTYPE html>
 <html>
 <headers>
+<script src="./javascripts/jquery-2.1.4.min.js" type="text/javascript"></script>
 <script src="./background.js"></script>
 <script src="./javascripts/url-min.js"></script>
 <script src="./privacyGuard.js"></script>
+<script src="./remoteServer.js"></script>
+<script src="./popupNewWindows.js"></script>
+<script src="./localStorage.js"></script>
+<script src="./urlParser.js"></script>
+<script src="./javascripts/modal.js"></script>
 </headers>
+<body>
+    <div id="dialog-1" title="Dialog Title goes here...">This my first jQuery UI Dialog!</div>
+<div id="dialog-2" title="Options">
+          <div align='center'>
+			<h1>LeakSentry <font color='red'>Warning</font></h1>
+		</div>
+		<div align='center'>
+			<h3>
+				Your 
+				<u id='leakitems'></u> 
+				is leaking towards 
+				<font id='leakto' color='red'>www.google.com</font>.
+			</h3>
+		</div>
+		<div>
+			<b>Details:</b>
+			<table style="width:100%" border=1>
+			    <tr>
+					<td><b>Alexa Rank:</b></td>
+					<td id='rank'>100</td>
+				</tr>
+			    <tr>
+					<td><b>WOT:</b></td>
+					<td id='wot'>yes</td>
+			    </tr>
+			    <tr>
+					<td><b>Visited before:</b></td>
+					<td id='isvisited'>yes</td>
+			    </tr>
+				<tr>
+					<td><b>Community:</b></td>
+					<td id='community'>no</td>
+			    </tr>
+			</table>
+		</div>
+      </div>
+</body>
 </html>

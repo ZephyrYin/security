@@ -9,7 +9,22 @@ chrome.storage.local.get(query_vector,  function(ret) {
 	address = ret.Address;
 	phone = ret.PhoneNumber;
 });
-
+function decode(leakId){
+    var str='',
+        index=0;
+    while(leakId>0&&index<6){
+        if(leakId%2==1){
+            if(str.length>0){
+                str=str+',';
+            }
+            str=str+query_vector[index];
+            index=index+1;
+        }
+        leakId=Math.floor(leakId/2);
+     
+    }
+    return str;
+}
 function checkPIILeak(str){
     str=str.toLowerCase();// to lower case
     var isLeaked = false,

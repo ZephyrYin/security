@@ -23,7 +23,8 @@
     "webRequest",
     "webRequestBlocking",
 	"tabs",
-	"storage"
+	"storage",
+    "webNavigation"
   ]
   
 }
